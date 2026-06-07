@@ -50,7 +50,7 @@ export class ProductsController {
       },
     }),
   }))
-  async uploadPhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+  async uploadPhoto(@Param('id') id: string, @UploadedFile() file: any) {
     this.logger.log(`[Products] Upload foto produto id=${id} | arquivo=${file.filename}`);
     const photoUrl = `/uploads/${file.filename}`;
     return this.productsService.update(id, { photoUrl, photoMode: 'upload' });
