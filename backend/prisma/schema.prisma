@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  name              String
+  description       String?
+  price             Decimal  @db.Decimal(10, 2)
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(3)
+  photoUrl          String?
+  photoMode         String   @default("link")
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model Order {
+  id                String        @id @default(uuid())
+  customerPhone     String
+  customerName      String
+  paymentMethod     PaymentMethod
+  status            OrderStatus   @default(PENDING)
+  totalAmount       Decimal       @db.Decimal(10, 2)
+  estimatedDelivery DateTime?
+  cancelledAt       DateTime?
+  cancelledBy       String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+  sale          Sale?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("order_status_history")
+}
+
+model Sale {
+  id      String   @id @default(uuid())
+  orderId String   @unique
+  amount  Decimal  @db.Decimal(10, 2)
+  date    DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("sales")
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  @@map("admins")
+}
+
+model StoreConfig {
+  id                  String  @id @default(uuid())
+  storeName           String  @default("Claudia Cakes")
+  welcomeMessage      String  @default("Ola! Bem-vindo a Claudia Cakes!")
+  orderConfirmMessage String  @default("Seu pedido foi enviado para a Claudia Cakes!")
+  whatsappNumber      String?
+  pixKey              String?
+
+  @@map("store_config")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PRODUCTION
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  PIX_ANTECIPADO
+  NA_ENTREGA
+}
